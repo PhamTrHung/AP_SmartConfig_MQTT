@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    html {font-family: Arial; display: inline-block; text-align: center;}
+  </style>
+  
+</head>
+
+<body>
+  <h2>Enter ssid and password to connect wifi</h2>
+
+  <form>
+    SSID:  <input type="text" id="ssid"><br>
+    PASSWORD: <input type="text" id="passw"><br>
+  </form>
+
+  <button onclick="myFunction()">Try it</button>
+
+<script>
+  var xhttp1 = new XMLHttpRequest();
+
+  function myFunction() {
+    var x = document.getElementById("ssid").value;
+    x = x + "&" + document.getElementById("passw").value + "&";
+    xhttp1.open("POST","/wifiInfor", true);
+    xhttp1.send(x);
+  }
+</script>
+
+</body>
+</html>

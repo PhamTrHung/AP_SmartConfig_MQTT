@@ -1,0 +1,205 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>ESP-NOW DASHBOARD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <link rel="icon" href="data:,">
+  <style>
+    html {font-family: Arial; display: inline-block; text-align: center;}
+    p {  font-size: 1.2rem;}
+    body {  margin: 0;}
+    .topnav { overflow: hidden; background-color: #2f4468; color: white; font-size: 1.7rem; }
+    .content { padding: 20px; }
+    .card { background-color: white; box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5); }
+    .cards { max-width: 700px; margin: 0 auto; display: grid; grid-gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .reading { font-size: 2.8rem; }
+    .packet { color: #bebebe; }
+    .card.temperature { color: #fd7e14; }
+    .card.humidity { color: #1b78e2; }
+    
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    
+    /* Hide default HTML checkbox */
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    /* The slider */
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+    
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+    
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+    
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+    
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+    
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    .showSt{font-size: 2.0rem;max-width: 100px; display: inline-block;text-align: center;padding-top: 10px;color: #271b91;text-wrap:wrap}
+
+
+
+
+  </style>
+</head>
+<body>
+  <div class="topnav">
+    <h3>ESP-NOW DASHBOARD</h3>
+  </div>
+  <div class="content">
+    <div class="cards">
+      <div class="card temperature">
+        <h4><i class="fas fa-thermometer-half"></i> BOARD #1 - TEMPERATURE</h4><p><span class="reading"><span id="t1"></span> &deg;C</span></p><p class="packet">Reading ID: <span id="rt1"></span></p>
+      </div>
+      <div class="card humidity">
+        <h4><i class="fas fa-tint"></i> BOARD #1 - HUMIDITY</h4><p><span class="reading"><span id="h1"></span> &percnt;</span></p><p class="packet">Reading ID: <span id="rh1"></span></p>
+      </div>
+    </div>
+    <br>
+
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/2254350/charts/1?bgcolor=%23ffffff&color=%23d62020&days=0&dynamic=true&results=60&type=line&yaxismax=100&yaxismin=0"></iframe>
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/2254350/charts/2?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&update=15"></iframe>
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/2254350/widgets/713688"></iframe>
+
+    <br><br>
+    <label class="switch">
+      <input type="checkbox" id="switch" >
+      <span class="slider round" ></span>
+      <h4><p><span class="showSt"><span id="ledState">LED OFF</span></span></p></h4>
+    </label>
+    <br><br>
+
+    <div class = "slidecontainer">
+      <input type="range" id="myRange" min="0" max = "100" value="0">
+      <span class = "sliderBar"><span id="demo">0</span>&percnt;</span>
+    </div>
+
+
+    <p style="color: #fd7e14;" id="parag">
+      Change the color of RGB led
+    </p>
+    <label for="color-picker">Color:</label>
+    <input type="color" value="#000000" id="color-picker" />
+
+    
+
+
+  </div>
+
+
+<script>
+var xhttp3 = new XMLHttpRequest();
+
+let colorPicker;
+const defaultColor = "#000000";
+
+window.addEventListener("load", startup, false);
+
+function startup() {
+  colorPicker = document.querySelector("#color-picker");
+  colorPicker.value = defaultColor;
+  colorPicker.addEventListener("input", updateFirst, false);
+  //colorPicker.addEventListener("change", updateAll, false);
+  colorPicker.select();
+}
+
+function updateFirst(event) {
+
+  xhttp3.open("POST","/rgbColor", true);
+  xhttp3.send(event.target.value);
+}
+
+</script>
+  
+<script>
+var xhttp1 = new XMLHttpRequest();
+var id_switch = document.getElementById('switch');
+var xhttp2 = new XMLHttpRequest();
+
+xhttp1.onreadystatechange = function(){
+  const obj = JSON.parse(this.responseText);
+  var element1 = document.getElementById('t1');
+  element1.innerText = obj.temperature;
+  var element2 = document.getElementById('h1');
+  element2.innerText = obj.humidity;
+
+}
+
+setInterval(function()
+{
+  xhttp1.open("GET", "/getDataDHT11", true);
+  xhttp1.send();
+},1000)
+
+
+id_switch.addEventListener('change',function(){
+  if(this.checked == true){
+    var element1 = document.getElementById('ledState');
+  	element1.innerText = "LED ON";
+    xhttp2.open("POST","/switchled", true);
+    xhttp2.send("Led on");
+  }else{
+    var element1 = document.getElementById('ledState');
+  	element1.innerText = "LED OFF";
+    xhttp2.open("POST","/switchled", true);
+    xhttp2.send("Led off");
+  }
+});
+
+var slider = document.getElementById("myRange");
+var output = document.getElementById("demo");
+
+slider.oninput = function() {
+  output.innerHTML = slider.value;
+  xhttp2.open("POST","/changeDuty", true);
+  xhttp2.send(slider.value);
+}
+
+</script>
+</body>
+</html>
