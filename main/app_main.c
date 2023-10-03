@@ -54,12 +54,8 @@ static const char *TAG = "httpClient";
 #define LED_PWM 21
 #define LED_CHANNEL 3
 
-
-char ssid[32] = "PhamHung202";
-char passw[64] = "01234567";
-
+// Con trỏ nhận giá trị trả về từ esp_netif_create_default_wifi_ap();
 esp_netif_t* ap;
-
 
 char request[512];
 char subrequest[200];

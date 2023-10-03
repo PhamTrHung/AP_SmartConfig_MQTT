@@ -1,0 +1,16 @@
+***** Đánh giá những hạn chế còn tồn tại trong chương trình hiện tại *****
+
+1. Ở chế độ smartconfig không chạy được httpClient đẩy data dht11 lên thinkspeak
+-> Hàm khởi tạo httpClient nằm trong hàm callback khi nhập thông tin wifi
+
+2. Chưa xử lí được trường hợp nếu nhập sai thông tin wifi
+-> Chương trình hiện tại nếu nhập sai thông tin wifi thì sẽ chạy mãi trong 1 vòng loop
+
+3. Với chương trình hiện tại ta, khi ở chế độ access point, để login thông tin wifi ta phải vào resource 
+"/login", sau đó khi kết nối được với router rồi thì để vào giao diện điều khiển thì ta phải truy cập vào 1
+cái resource khác mà esp32 được router cấp cho.
+-> Mong muốn: khi nhập xong ssid và passw, nếu sai thông tin wifi thì báo về web nhập lại, nếu đúng trang web
+tự động reset và đi tới resource "/main"
+
+4. Trang web hiện tại chưa được đẹp, cấu trúc trang web chưa hợp lí, thao tác với trang web không có gì đặc
+biệt
