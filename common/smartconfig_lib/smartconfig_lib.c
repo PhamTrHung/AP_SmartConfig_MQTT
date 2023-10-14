@@ -21,8 +21,14 @@
 #include "esp_netif.h"
 #include "esp_smartconfig.h"
 
+#include "smartconfig_lib.h"
+
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
+
+/*Creat function pointer*/
+smartconfig_successfully_callback smartconfig_successfully_cb;
+
 
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
@@ -109,6 +115,9 @@ static void smartconfig_example_task(void * parm)
         if(uxBits & ESPTOUCH_DONE_BIT) {
             ESP_LOGI(TAG, "smartconfig over");
             esp_smartconfig_stop();
+
+            //smartconfig_successfully_cb();
+
             vTaskDelete(NULL);
         }
     }
@@ -118,5 +127,11 @@ void smartconfig_start(void)
 {
     //ESP_ERROR_CHECK( nvs_flash_init() );
     initialise_wifi();
+}
+
+
+void smartconfig_done_set_callback(void* cb)
+{
+    smartconfig_successfully_cb = cb;
 }
 

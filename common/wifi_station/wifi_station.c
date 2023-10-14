@@ -14,7 +14,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-
+#define ESP_MAXIMUM_RETRY  7
 
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -23,15 +23,23 @@ static EventGroupHandle_t s_wifi_event_group;
 
 static const char *TAG = "wifi station";
 
+static int s_retry_num = 0;
+
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        
-        esp_wifi_connect();
         ESP_LOGI(TAG,"connect to the AP fail");
+        s_retry_num++;
+        esp_wifi_connect();
+        
+        if(s_retry_num >= ESP_MAXIMUM_RETRY)
+        {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
+
 
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ESP_LOGI(TAG, "connected successly");
@@ -75,7 +83,7 @@ void wifi_init_sta(char wifi_name[32], char wifi_passw[64])
     ESP_LOGI(TAG, "wifi_init_sta finished.");
 
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-        WIFI_CONNECTED_BIT,
+        WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
         pdFALSE,
         pdFALSE,
         portMAX_DELAY);
@@ -88,9 +96,16 @@ void wifi_init_sta(char wifi_name[32], char wifi_passw[64])
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
                  wifi_name, wifi_passw);
+        
+        esp_wifi_deinit();  
+        esp_wifi_restore();      
+        esp_restart();    
+                
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
+
+
 
     /* The event will not be processed after unregister */
     // ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, NULL));

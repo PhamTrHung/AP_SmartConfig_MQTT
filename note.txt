@@ -14,3 +14,15 @@ tự động reset và đi tới resource "/main"
 
 4. Trang web hiện tại chưa được đẹp, cấu trúc trang web chưa hợp lí, thao tác với trang web không có gì đặc
 biệt
+
+
+***** Đánh giá những hạn chế còn tồn tại trong chương trình 12/10/2023 *****
+1. Các vấn đề trên chưa được giải quyết.
+
+2. Trong mode mqtt, đã kết nối được với esp32 trong port 1883
+-> Chưa hoàn thành kết nối trong port 8884
+
+
+
+
+
