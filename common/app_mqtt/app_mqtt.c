@@ -28,8 +28,15 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
+#include "app_mqtt.h"
 
 static const char *TAG = "MQTTS_EXAMPLE";
+static esp_mqtt_client_handle_t client;
+
+ESP_EVENT_DEFINE_BASE(MQTT_DEV_EVENT);
+
+mqtt_get_data_callback mqtt_handle_data_cb = NULL;
+
 
 extern const uint8_t client_cert_pem_start[] asm("_binary_client_crt_start");
 extern const uint8_t client_cert_pem_end[] asm("_binary_client_crt_end");
@@ -38,7 +45,7 @@ extern const uint8_t client_key_pem_end[] asm("_binary_client_key_end");
 
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
-    esp_mqtt_client_handle_t client = event->client;
+    client = event->client;
     int msg_id;
     // your_context_t *context = event->context;
     switch (event->event_id) {
@@ -46,15 +53,18 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             msg_id = esp_mqtt_client_subscribe(client, "/hello/phamtronghung", 0);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+            esp_event_post(MQTT_DEV_EVENT, MQTT_DEV_EVENT_CONNECTED, NULL, 0, portMAX_DELAY);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+            esp_event_post(MQTT_DEV_EVENT, MQTT_DEV_EVENT_DISCONNECT, NULL, 0, portMAX_DELAY);
             break;
 
         case MQTT_EVENT_SUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-            msg_id = esp_mqtt_client_publish(client, "/hello/phamtronghung", "data", 0, 0, 0);
+            msg_id = esp_mqtt_client_publish(client, "/hello/phamtronghung", NULL, 0, 0, 0);
             ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+            esp_event_post(MQTT_DEV_EVENT, MQTT_DEV_EVENT_SUBSCRIBED, NULL, 0, portMAX_DELAY);
             break;
         case MQTT_EVENT_UNSUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -64,8 +74,13 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            printf("DATA=%.*s\r\n", event->data_len, event->data);
+            if(event->data != NULL)
+            {
+                mqtt_handle_data_cb(event->data, event->data_len);
+            }
+            // printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+            // printf("DATA=%.*s\r\n", event->data_len, event->data);
+            //esp_event_post(MQTT_DEV_EVENT, MQTT_DEV_EVENT_DATA, event->data, 0, portMAX_DELAY);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -89,6 +104,25 @@ void mqtt_app_start(void)
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_start(client);
+}
+
+void mqtt_set_data_callback(void* cb)
+{
+    if(cb)
+    {
+        mqtt_handle_data_cb = cb;
+    }
+}
+
+void app_mqtt_publish(char* topic, char* data, int len)
+{
+    esp_mqtt_client_publish(client, topic, data, len, 1, 0);
+}
+
+
+void app_mqtt_subscribe(char* topic)
+{
+    esp_mqtt_client_subscribe(client, topic, 1);
 }
 
 // void app_mqtt_start(void)

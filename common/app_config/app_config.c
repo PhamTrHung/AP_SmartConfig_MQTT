@@ -18,7 +18,7 @@
 
 static const char *TAG = "app_config";
 
-provisoned_type_t provisioned_type = PROVISIONED_ACCESSPOINT;
+provisoned_type_t provisioned_type = PROVISIONED_SMARTCONFIG;
 
 
 char wifiModeSta_SSID[32];

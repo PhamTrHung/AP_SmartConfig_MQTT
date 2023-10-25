@@ -10,6 +10,7 @@ SRCS "../common/dht11/dht11.c"
 SRCS "../common/output_iot/output_iot.c"  
 SRCS "../common/ledc_lib/ledc_mode.c"
 SRCS "../common/simple_ota/simple_ota.c"
+SRCS "../common/gatt_server/gatt_server.c"
 INCLUDE_DIRS ../common/app_mqtt
 INCLUDE_DIRS ../common/app_config
 INCLUDE_DIRS ../common/smartconfig_lib
@@ -20,5 +21,6 @@ INCLUDE_DIRS ../common/dht11
 INCLUDE_DIRS ../common/output_iot
 INCLUDE_DIRS ../common/ledc_lib
 INCLUDE_DIRS ../common/simple_ota
+INCLUDE_DIRS ../common/gatt_server
 INCLUDE_DIRS ".")
 

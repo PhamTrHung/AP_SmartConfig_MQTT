@@ -23,11 +23,10 @@
 
 #include "smartconfig_lib.h"
 
+#define ESP_MAXIMUM_RETRY  7
+
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
-
-/*Creat function pointer*/
-smartconfig_successfully_callback smartconfig_successfully_cb;
 
 
 /* The event group allows multiple bits for each event,
@@ -36,6 +35,8 @@ smartconfig_successfully_callback smartconfig_successfully_cb;
 static const int CONNECTED_BIT = BIT0;
 static const int ESPTOUCH_DONE_BIT = BIT1;
 static const char *TAG = "smartconfig_example";
+
+static int s_retry_num = 0;
 
 static void smartconfig_example_task(void * parm);
 
@@ -77,6 +78,18 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         ESP_ERROR_CHECK( esp_wifi_disconnect() );
         ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
         esp_wifi_connect();
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        ESP_LOGI(TAG,"connect to the AP fail");
+        s_retry_num++;
+        esp_wifi_connect();
+        
+        if(s_retry_num >= ESP_MAXIMUM_RETRY)
+        {
+            ESP_LOGI(TAG, "Failed to connect to access point");
+            esp_wifi_deinit();  
+            esp_wifi_restore();      
+            esp_restart();    
+        }
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_SEND_ACK_DONE) {
         xEventGroupSetBits(s_wifi_event_group, ESPTOUCH_DONE_BIT);
     }
@@ -116,8 +129,6 @@ static void smartconfig_example_task(void * parm)
             ESP_LOGI(TAG, "smartconfig over");
             esp_smartconfig_stop();
 
-            //smartconfig_successfully_cb();
-
             vTaskDelete(NULL);
         }
     }
@@ -127,11 +138,5 @@ void smartconfig_start(void)
 {
     //ESP_ERROR_CHECK( nvs_flash_init() );
     initialise_wifi();
-}
-
-
-void smartconfig_done_set_callback(void* cb)
-{
-    smartconfig_successfully_cb = cb;
 }
 
